@@ -1,12 +1,13 @@
 use std::env;
-use tokio::{net::TcpSocket, sync::mpsc::Sender};
+use tokio::sync::mpsc::Sender;
+use tokio::net::TcpStream;
 
 const DEFAULT_HOST: &str = "localhost";
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ScanResult {
-    port: u8,
-    open: bool
+    pub port: u16,
+    pub open: bool
 }
 
 pub fn get_host() -> String{
@@ -15,22 +16,21 @@ pub fn get_host() -> String{
 }
 
 pub async fn scan_all_ports(host: String, sender: Sender<ScanResult>) {
-    for i in 0..=u8::MAX {
-        let sender = sender.clone();
+    for i in 0..=u16::MAX {
         let address = build_address(&host, &i);
+        let sender = sender.clone();
+
         tokio::spawn(async move {
-            let addr = address.parse().unwrap();
-            let socket = TcpSocket::new_v4().unwrap();
-            let result = socket.connect(addr).await;
+            let result = TcpStream::connect(address).await;
             let result = match result {
                 Ok(_) => ScanResult { port: i, open: true },
                 Err(_) => ScanResult { port: i, open: false },
             };
-            sender.send(result);
+            sender.send(result).await.unwrap();
         });
     }
 }
 
-fn build_address(host: &String, port: &u8) -> String {
+fn build_address(host: &String, port: &u16) -> String {
     format!("{host}:{port}")
 }
