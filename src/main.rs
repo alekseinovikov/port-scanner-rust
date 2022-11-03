@@ -12,7 +12,6 @@ async fn main() {
     let host = get_host();
     let (sender, mut receiver) = channel::<ScanResult>(u8::MAX as usize);
     let mut progress_bar = ProgressBar::new(u16::MAX as u64);
-    progress_bar.format("╢▌▌░╟");
 
 
     scan_all_ports(host, sender).await;

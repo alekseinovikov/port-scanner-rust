@@ -26,7 +26,12 @@ pub async fn scan_all_ports(host: String, sender: Sender<ScanResult>) {
                 Ok(_) => ScanResult { port: i, open: true },
                 Err(_) => ScanResult { port: i, open: false },
             };
-            sender.send(result).await.unwrap();
+            match sender.send(result).await {
+                Err(err) => {
+                    println!("Error on sending result to the channel: {}", err);
+                },
+                _ => {}
+            }
         });
     }
 }
