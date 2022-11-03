@@ -6,8 +6,8 @@ const DEFAULT_HOST: &str = "localhost";
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ScanResult {
-    pub port: u16,
-    pub open: bool
+    pub open: bool,
+    pub address: String,
 }
 
 pub fn get_host() -> String{
@@ -21,10 +21,10 @@ pub async fn scan_all_ports(host: String, sender: Sender<ScanResult>) {
         let sender = sender.clone();
 
         tokio::spawn(async move {
-            let result = TcpStream::connect(address).await;
+            let result = TcpStream::connect(address.clone()).await;
             let result = match result {
-                Ok(_) => ScanResult { port: i, open: true },
-                Err(_) => ScanResult { port: i, open: false },
+                Ok(_) => ScanResult { open: true, address: address.clone() },
+                Err(_) => ScanResult { open: false, address: address.clone() },
             };
             match sender.send(result).await {
                 Err(err) => {
