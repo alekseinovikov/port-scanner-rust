@@ -1,5 +1,6 @@
 extern crate pbr;
 
+use std::io::{stdout, Write};
 use port_scanner_rust::get_host;
 use port_scanner_rust::scan_all_ports;
 use port_scanner_rust::ScanResult;
@@ -15,13 +16,16 @@ async fn main() {
 
     scan_all_ports(host, sender).await;
 
+    let mut stdout = stdout();
     let mut open_addresses = vec![];
     while let Some(r) = receiver.recv().await {
         progress_bar.inc();
 
+        stdout.flush().unwrap();
         if r.open {
             open_addresses.push(r.address.clone());
             println!(" OPEN: {}", r.address);
+            stdout.flush().unwrap();
         }
     }
 
